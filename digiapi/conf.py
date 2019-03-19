@@ -1,5 +1,6 @@
 import os
 import itertools
+import sys
 from itertools import islice, tee, chain
 from pathlib import Path
 from configparser import SafeConfigParser
@@ -13,6 +14,14 @@ confd_org = Path(confd / 'org.d')
 confd_dom = Path(confd / 'dom.d')
 confd_cert = Path(confd / 'cert.d')
 keyd = Path(cert_lib / 'key.d')
+# ANSI Colors
+RED = "\033[1;31m"
+BLUE = "\033[1;34m"
+CYAN = "\033[1;36m"
+GREEN = "\033[0;32m"
+RESET = "\033[0;0m"
+BOLD = "\033[;1m"
+REVERSE = "\033[;7m"
 
 # Find conf.d, else create conf.d
 if not os.path.exists(str(confd)):
@@ -49,10 +58,10 @@ else:
 
 # Global Functions
 # Create columns for paginate function
-def page_parse(data, num_col):
+def page_parse(data, num_row):
     i = iter(data)
     while True:
-        page = list(itertools.islice(i, 0, num_col))
+        page = list(itertools.islice(i, 0, num_row))
         if len(page):
             yield page
         else:
@@ -79,11 +88,13 @@ def paginate(data, num_col):
         else:
             print('Press "n", "b", or "q"')
             break
-
+# Check Digicert API response for errors
 def rest_status(req):
-    if req.status_code is not 200 or 201 or 202:
+    if req.status_code not in [ 200, 201, 202 ]:
         resp = req.json()
         print("\n\n$$$$$$ COPY BELOW FOR SUPPORT $$$$$$")
         for msg in resp["errors"]:
+            sys.stdout.write(RED)
             print(msg["message"])
+        sys.stdout.write(RESET)
         raise LookupError("Bad API request. Error Code: " + str(req.status_code))

@@ -13,9 +13,7 @@ headers_post = {"X-DC-DEVKEY" : conf.api_key, "Content-Type" : "application/json
 def view_org(oid):
     req_url = url + '/' + oid
     req = requests.get(req_url, headers=headers_get)
-    if req.status_code is not 200 or 201 or 202:
-        print(req.status_code)
-        rest_status(req)
+    rest_status(req)
     return req.json()
 
 def list_org(val_list):
@@ -24,9 +22,7 @@ def list_org(val_list):
     else:
         req_url = url
     req = requests.get(req_url, headers=headers_get)
-    if req.status_code is not 200 or 201 or 202:
-        print(req.status_code)
-        rest_status(req)
+    rest_status(req)
     return req.json()
 
 def new_org():
@@ -66,25 +62,19 @@ def new_org():
       }
     })
     req = requests.post(url, headers=headers_post, data=payload)
-    if req.status_code is not 200 or 201 or 202:
-        print(req.status_code)
-        rest_status(req)
+    rest_status(req)
     print('\nNew org id: ' + str(resp["id"]))
     return resp["id"]
 
 def submit_org(payload, oid):
     req_url = url + '/' + oid + '/validation'
     req = requests.post(req_url, headers=headers_post, data=payload)
-    if req.status_code is not 200 or 201 or 202:
-        print(req.status_code)
-        rest_status(req)
+    rest_status(req)
     return req
 
 # See active validations for an org
 def active_org_val(oid):
     req_url = url + '/' + str(oid) + '/validation'
     req = requests.get(req_url, headers=headers_post)
-    if req.status_code is not 200 or 201 or 202:
-        print(req.status_code)
-        rest_status(req)
+    rest_status(req)
     return req.json()
