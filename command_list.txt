@@ -1,0 +1,44 @@
+{
+  DigiCert Cli {
+    Optional/General Arguments: {
+      Expiring Orders
+    }
+    Groups: {
+      Certificate Management {
+        list cert,
+        viewcert,
+        new cert,
+        revoke cert,
+        edit cert,
+        duplicate cert,
+        duplicate list
+      },
+      Domain Management (
+        list domain,
+        activate domain,
+        deactivate domain,
+        submit domain,
+        create dcv,
+        submit dcv,
+        new domain,
+        view domain
+      ),
+      Organization Management {
+        list organization,
+        view organization,
+        validate organization,
+        new organization
+      },
+      Request Management {
+
+      },
+      User Management {
+        new user,
+        edit user,
+        view user,
+        delete user,
+        list all users
+      }
+    }
+  }
+}

@@ -1,3 +1,12 @@
+# Other
+.gitignore
+.gitattributes
+python-env
+*.conf
+api.key
+conf.d/
+key.d/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
