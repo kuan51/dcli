@@ -5,7 +5,7 @@ from pathlib import Path
 from digiapi.conf import api_key, cert_lib, confd, main_conf, confd_org, confd_dom, confd_cert, keyd, page_parse, paginate
 from digiapi.org import url, headers_get, headers_post, view_org, list_org, new_org, submit_org, active_org_val
 from digiapi.cert import url, headers_get, headers_post, list_cert, view_cert, new_cert, revoke_cert, download_cert, download_cert_by_format, list_duplicates, list_requests, view_request, update_request
-from digiapi.domain import list_domains
+from digiapi.domain import list_domains, view_domain
 
 # Main ArgParse Parser
 parser = argparse.ArgumentParser(prog='digiutil', add_help=True)
@@ -142,13 +142,6 @@ if args.init_org:
         p1.set('Organization Validation', str('org_' + org), str(Path(conf)))
         with open(str(main_conf.resolve()), 'w') as f:
             p1.write(f)
-        # Get org validation by chosen oid to save in org.conf
-        vals = active_org_val(org)
-        a = []
-        if vals.get('validations'):
-            for val in vals['validations']:
-                if val['status'] == 'active':
-                    a.append(val['type'])
         # Create org entry in key.d
         key_dir = Path( keyd / org_name )
         if not os.path.exists(str(key_dir)):
@@ -165,6 +158,15 @@ if args.init_org:
             p2.write(f)
     else:
         'Please choose y or n'
+    # Get org validation by chosen oid to save in org.conf
+    vals = active_org_val(org)
+    a = []
+    if vals.get('validations'):
+        for val in vals['validations']:
+            if val['status'] == 'active':
+                a.append(val['type'])
+    # If no active validations, submit for validation
+
     print('Org ' + org + ' was initialized: ' + str(conf))
 # Validate domain
 if args.init_dom:
@@ -172,23 +174,25 @@ if args.init_dom:
     # Pick from list of existing domains
     resp = list_domains()
     list = []
-    col = ['Domain ID', 'Domain', 'Activated', 'DCV Status']
-    print(resp)
+    col = ['Domain ID', 'Domain', 'Activated', 'Validation Status']
     list.append(col)
     for dom in resp["domains"]:
         if dom.get('validations'):
             array = []
-            array.append(dom['id'])
+            array.append(str(dom['id']))
             array.append(dom['name'])
             if dom['is_active'] == True:
                 array.append('yes')
             else:
                 array.append('no')
-            array.append(dom['validations'][0]['dcv_status'])
+            for validated in dom['validations']:
+                val_array = []
+                val_array.append(validated['type'])
+            array.append(', '.join(val_array))
             list.append(array)
         else:
             array = []
-            array.append(dom['id'])
+            array.append(str(dom['id']))
             array.append(dom['name'])
             if dom['is_active'] == True:
                 array.append('yes')
@@ -196,22 +200,22 @@ if args.init_dom:
                 array.append('no')
             array.append('')
             list.append(array)
-    paginate(list, 5)
+    paginate(list, 10)
     # Get domain info by did
     did = input('Which domain do you want to configure? (Use domain id) ')
-    dom_resp = view_domain(did)
+    dom_resp = view_domain(did) 
     # Get org.conf path
     x = str(dom_resp['organization']['id']) + '.conf'
     org_conf = Path(confd_org / x)
     # Print error if org.conf doesnt exist
-    if not os.path.exists(org_conf):
+    if not os.path.exists(str(org_conf)):
         print('Error: Initialize org ' + str(dom_resp['organization']['id']))
     else:
         conf = Path(confd_dom / str(did + '.conf'))
         # Add domain to init.conf
         p1 = ConfigParser()
         p1.read(str(main_conf))
-        p1.set('Initialized Domains', str('dom_' + did), str(Path(conf)))
+        p1.set('Domain Validation', str('dom_' + did), str(Path(conf)))
         with open(str(main_conf), 'w') as f:
             p1.write(f)
         # Create domain.conf
