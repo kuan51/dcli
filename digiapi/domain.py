@@ -19,7 +19,25 @@ def view_domain(did):
     req_url = url + '/' + did + '?include_dcv=true&include_validation=true'
     req = requests.get(req_url, headers=headers_get)
     req.raise_for_status()
-    return req.json()
+    resp = req.json()
+    list = []
+    col = ['ID', 'Name', 'Status', 'DCV Method', 'Org ID']
+    list.append(col)
+    array = []
+    array.append(resp['id'])
+    array.append(resp['name'])
+    array.append(resp['status'])
+    if resp['dcv_method'] == 'email':
+        array.append('email')
+    elif resp['dcv_method'] == 'dns-txt-token':
+        array.append('txt')
+    elif resp['dcv_method'] == 'dns-cname-token':
+        array.append('cname')
+    elif resp['dcv_method'] == 'http-token':
+        array.append('http')
+    array.append(resp['organization']['id'])
+    list.append(array)
+    return list
 
 def activate_domain(did):
     req_url = url + '/' + did + '/activate'

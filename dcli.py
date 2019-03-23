@@ -15,7 +15,6 @@ subparsers = parser.add_subparsers()
 parser.add_argument("--init", help="Initialize configuration scripts", action="store_true")
 parser.add_argument("--init-org", help="Validate a organization", action="store_true")
 parser.add_argument("--init-dom", help="Validate a domain", action="store_true")
-parser.add_argument("--test", action="store_true")
 
 # Argparse Certificate Management Sub Parser
 parser_cert = subparsers.add_parser('crt')
@@ -258,3 +257,10 @@ if args.view_cert:
         paginate(resp,10)
     except:
         raise TypeError('Argument is not an integer.')
+
+# Enroll in new certificate
+if args.new_cert:
+    try:
+        new_cert(args.new_cert)
+    except:
+        raise Exception('Unable to enroll new certificate.')

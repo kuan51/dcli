@@ -67,45 +67,18 @@ def new_org():
     print('\nNew org id: ' + str(resp["id"]))
     return resp["id"]
 
-'''
-def submit_org(oid):
-    # Prompt to select a verified user for the Digicert validation process
-    usrs = list_usr()
-    list = []
-    col = ['Usr ID', 'Username', 'Email']
-    list.append(col)
-    for usr in usrs['users']:
-        array =[]
-        array.append(usr['id'])
-        array.append(usr['username'])
-        array.append(usr['email'])
-        list.append(array)
-    paginate(list, 5)
-    uid = input("Choose a verified user for the org by their id: ")
-    payload = json.dumps({
-      'validations':
-        [{
-          'type': args.submit_org,
-          'verified_users':
-            [{
-              'id': uid
-            }]
-        }]
-    })
-    resp = submit_org(payload, oid)
-    if resp.status_code == 204:
-        print('Org' + oid + ' has been submitted for ' + args.submit_org + ' validation')
-    req_url = url + '/' + oid + '/validation'
-    req = requests.post(req_url, headers=headers_post, data=payload)
-    rest_status(req)
-    return req
-'''
-
 # See active validations for an org
 def active_org_val(oid):
     req_url = url + '/' + str(oid) + '/validation'
     req = requests.get(req_url, headers=headers_get)
     rest_status(req)
+    return req.json()
+
+# Get Organizations available for new orders
+def get_active_org():
+    req_url = 'https://www.digicert.com/services/v2/container/' + str(root_container()) + '/order/organization'
+    req = requests.get(req_url, headers=headers_get)
+    req.raise_for_status()
     return req.json()
 
 # Submit organization id for validation
