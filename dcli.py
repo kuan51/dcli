@@ -21,7 +21,7 @@ parser.add_argument("--test", action="store_true")
 parser_cert = subparsers.add_parser('crt')
 parser_cert.add_argument("-l", "--list-cert", help="List all orders", action='store_true')
 parser_cert.add_argument("-v", "--view-cert", help="View order details by id")
-parser_cert.add_argument("-n", "--new-cert", help="New orde, requires csr", choices=['dv','ov', 'ev', 'cs'])
+parser_cert.add_argument("-n", "--new-cert", help="New order, requires csr", choices=['dv','ov', 'ev', 'cs'])
 parser_cert.add_argument("-r", "--revoke-cert", help="Revoke order")
 parser_cert.add_argument("-e", "--edit-cert", help="Edit order (reissue)")
 parser_cert.add_argument("-d", "--duplicate-cert", help="Create copy of an order with a different CSR")
@@ -250,3 +250,11 @@ if args.init_dom:
 if args.list_cert:
     resp = list_cert()
     paginate(resp,10)
+
+# View a orders details
+if args.view_cert:
+    try:
+        resp = view_cert(args.view_cert)
+        paginate(resp,10)
+    except:
+        raise TypeError('Argument is not an integer.')

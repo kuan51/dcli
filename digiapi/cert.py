@@ -1,5 +1,6 @@
 from digiapi import conf
 from digiapi.conf import confd_cert, rest_status, confd_org, keyd
+from digiapi.org import get_active_org
 from pathlib import Path
 from configparser import ConfigParser
 import re
@@ -38,13 +39,20 @@ def view_cert(ordernum):
     req_url = url + '/' + ordernum
     req = requests.get(req_url, headers=headers_get)
     rest_status(req)
-    return req.json()
-
-def new_cert(payload):
-    req_url = url + '/ssl'
-    req = requests.post(req_url, headers=headers_post, data=payload)
-    rest_status(req)
-    return req.json()
+    resp = req.json()
+    list = []
+    col = ['Order Num', 'Common Name',  'Org','Expires', 'Sig Hash', 'Key Size', 'Status']
+    list.append(col)
+    array = []
+    array.append(str(resp['id']))
+    array.append(resp['certificate']['common_name'])
+    array.append(str(resp['certificate']['organization']['id']))
+    array.append(resp['certificate']['valid_till'])
+    array.append(resp['certificate']['signature_hash'])
+    array.append(str(resp['certificate']['key_size']))
+    array.append(resp['status'])
+    list.append(array)
+    return list
 
 def revoke_cert(oid, comment):
     req_url = 'https://www.digicert.com/services/v2/certificate/' + oid + '/revoke'
