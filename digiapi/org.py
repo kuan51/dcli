@@ -2,7 +2,8 @@ import requests
 import json
 from digiapi import conf
 from digiapi.container import root_container
-from digiapi.conf import rest_status
+from digiapi.conf import rest_status, paginate
+from digiapi.usr import list_usr, verified_usr
 
 # REST resources
 url = 'https://www.digicert.com/services/v2/organization'
@@ -66,6 +67,7 @@ def new_org():
     print('\nNew org id: ' + str(resp["id"]))
     return resp["id"]
 
+'''
 def submit_org(oid):
     # Prompt to select a verified user for the Digicert validation process
     usrs = list_usr()
@@ -97,10 +99,87 @@ def submit_org(oid):
     req = requests.post(req_url, headers=headers_post, data=payload)
     rest_status(req)
     return req
+'''
 
 # See active validations for an org
 def active_org_val(oid):
     req_url = url + '/' + str(oid) + '/validation'
-    req = requests.get(req_url, headers=headers_post)
+    req = requests.get(req_url, headers=headers_get)
     rest_status(req)
     return req.json()
+
+# Submit organization id for validation
+def submit_org(oid):
+    choice = input('Submit org for OV, EV, OV CS, or EV CS? [ov/ev/cs/evcs] ')
+    type = ''
+    while type != 'ov' or 'ev' or 'ovcs' or 'evcs':
+        if choice == 'ov':
+            type = 'ov'
+            payload = json.dumps({
+              "validations": [
+                {
+                  "type": type
+                }
+              ]
+             })
+            break
+        elif choice == 'ev':
+            type = 'ev'
+            verified_usr()
+            # Craft payload for REST request
+            payload = json.dumps({
+              "validations": [
+                {
+                  "type": type,
+                  "verified_users": [
+                    {
+                      "id": uid
+                    }
+                  ]
+                }
+              ]
+             })
+            break
+        elif choice == 'cs':
+            type = 'cs'
+            verified_usr()
+            # Craft payload for REST request
+            payload = json.dumps({
+              "validations": [
+                {
+                  "type": type,
+                  "verified_users": [
+                    {
+                      "id": uid
+                    }
+                  ]
+                }
+              ]
+             })
+            break
+        elif choice == 'evcs':
+            type = 'ev_cs'
+            verified_usr()
+            # Craft payload for REST request
+            payload = json.dumps({
+              "validations": [
+                {
+                  "type": type,
+                  "verified_users": [
+                    {
+                      "id": uid
+                    }
+                  ]
+                }
+              ]
+             })
+            break
+        else:
+            print('Please enter ov, ev, ovcs, or evcs.')
+            choice = input('Submit org for OV, EV, OV CS, or EV CS? [ov/ev/ovcs/evcs] ')
+    req_url = url + '/' + oid + '/validation'
+    req = requests.post(req_url, headers=headers_post, data=payload)
+    if req.status_code == 204:
+        print('Org' + oid + ' has been submitted for ' + type + ' validation')
+    rest_status(req)
+    return req

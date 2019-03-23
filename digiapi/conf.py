@@ -76,7 +76,7 @@ def paginate(data, num_col):
         for row in pages[pnum]:
             print("\t".join((val.ljust(width) for val, width in zip(row, widths))))
         print("\nPage " + str(pnum) + ": ")
-        cursor = input('Press [n]ext, [b]ack, or [q]uit. ')
+        cursor = input('Press [n]ext, [b]ack, or [enter] to continue. ')
         print('-' * sum(widths))
         print('\n')
         if cursor == 'b':
@@ -90,7 +90,7 @@ def paginate(data, num_col):
             break
 # Check Digicert API response for errors
 def rest_status(req):
-    if req.status_code not in [ 200, 201, 202 ]:
+    if req.status_code not in [ 200, 201, 202, 204 ]:
         resp = req.json()
         print("\n\n$$$$$$ COPY BELOW FOR SUPPORT $$$$$$")
         for msg in resp["errors"]:

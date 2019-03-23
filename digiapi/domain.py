@@ -1,5 +1,6 @@
 from digiapi import conf
 from digiapi.container import root_container
+from digiapi.conf import rest_status
 import requests
 import json
 
@@ -32,10 +33,36 @@ def deactivate_domain(did):
     req.raise_for_status()
     return req
 
-def submit_domain(payload, did):
+def submit_domain(did):
+    choice = input('Submit domain for OV, EV, OV CS, or EV CS? [ov/ev/ovcs/evcs] ')
+    type = ''
+    while type != 'ov' or 'ev' or 'ovcs' or 'evcs':
+        if choice == 'ov':
+            type = 'ov'
+            break
+        elif choice == 'ev':
+            type = 'ev'
+            break
+        elif choice == 'ovcs':
+            type = 'cs'
+        elif choice == 'evcs':
+            type = 'ev_cs'
+        else:
+            print('Please enter ov, ev, ovcs, or evcs.')
+            choice = input('Submit domain for OV, EV, OV CS, or EV CS? [ov/ev/ovcs/evcs] ')
+    payload = json.dumps({
+      "validations": [
+        {
+          "type": type,
+          "user": {
+            "id": did
+          }
+        }
+      ]
+    })
     req_url = url + '/' + did + '/validation'
     req = requests.post(req_url, headers=headers_post, data=payload)
-    req.raise_for_status()
+    rest_status(req)
     return req
 
 def dcv_methods():

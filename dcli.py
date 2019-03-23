@@ -5,7 +5,7 @@ from pathlib import Path
 from digiapi.conf import api_key, cert_lib, confd, main_conf, confd_org, confd_dom, confd_cert, keyd, page_parse, paginate
 from digiapi.org import url, headers_get, headers_post, view_org, list_org, new_org, submit_org, active_org_val
 from digiapi.cert import url, headers_get, headers_post, list_cert, view_cert, new_cert, revoke_cert, download_cert, download_cert_by_format, list_duplicates, list_requests, view_request, update_request
-from digiapi.domain import list_domains, view_domain
+from digiapi.domain import list_domains, view_domain, submit_domain
 
 # Main ArgParse Parser
 parser = argparse.ArgumentParser(prog='digiutil', add_help=True)
@@ -114,6 +114,7 @@ if args.init:
         with open(file, 'w+') as f:
             parser.write(f)
         print('init.conf was saved in: ' + str(conf.resolve()))
+
 # Validate org
 if args.init_org:
     reval = input('Is this the FIRST time registering the org with Digicert? ')
@@ -133,10 +134,12 @@ if args.init_org:
             org_list.append(array)
         pages = paginate(org_list, 5)
         org = input('Enter the id of the org you want to validate: ')
-        # Get org name
+        # Get org name and confd path
         org_name = view_org(org)['name']
-        # Add org to init.conf
         conf = Path(confd_org / str(org + '.conf'))
+        if os.path.exists(str(conf)):
+            os.remove(str(conf))
+        # Add org to init.conf
         p1 = ConfigParser()
         p1.read(str(main_conf.resolve()))
         p1.set('Organization Validation', str('org_' + org), str(Path(conf)))
@@ -146,6 +149,17 @@ if args.init_org:
         key_dir = Path( keyd / org_name )
         if not os.path.exists(str(key_dir)):
             os.makedirs(str(key_dir))
+        # Get active org validations
+        vals = active_org_val(org)
+        a = []
+        if vals.get('validations'):
+            for val in vals['validations']:
+                # If active, set in configuration file
+                if val['status'] == 'active':
+                    a.append(val['type'])
+        # Else submit for validation
+        else:
+            submit_org(org)
         # Create org.conf
         p2 = ConfigParser()
         p2.read(str(conf))
@@ -158,16 +172,9 @@ if args.init_org:
             p2.write(f)
     else:
         'Please choose y or n'
-    # Get org validation by chosen oid to save in org.conf
-    vals = active_org_val(org)
-    a = []
-    if vals.get('validations'):
-        for val in vals['validations']:
-            if val['status'] == 'active':
-                a.append(val['type'])
     # If no active validations, submit for validation
-
     print('Org ' + org + ' was initialized: ' + str(conf))
+
 # Validate domain
 if args.init_dom:
     print('Initializing domain...')
@@ -203,7 +210,7 @@ if args.init_dom:
     paginate(list, 10)
     # Get domain info by did
     did = input('Which domain do you want to configure? (Use domain id) ')
-    dom_resp = view_domain(did) 
+    dom_resp = view_domain(did)
     # Get org.conf path
     x = str(dom_resp['organization']['id']) + '.conf'
     org_conf = Path(confd_org / x)
@@ -212,6 +219,8 @@ if args.init_dom:
         print('Error: Initialize org ' + str(dom_resp['organization']['id']))
     else:
         conf = Path(confd_dom / str(did + '.conf'))
+        if os.path.exists(str(conf)):
+            os.remove(str(conf))
         # Add domain to init.conf
         p1 = ConfigParser()
         p1.read(str(main_conf))
@@ -226,10 +235,18 @@ if args.init_dom:
         p2.set('Initialized Domain', 'name', dom_resp['name'])
         p2.set('Initialized Domain', 'org', str(dom_resp['organization']['id']))
         p2.set('Initialized Domain', 'dcv_status', dom_resp['status'])
+        # If domain is validated, set validation
         if dom['is_active'] == True:
             p2.set('Initialized Domain', 'activated', 'yes')
+        # Else submit domain for validation
         else:
             p2.set('Initialized Domain', 'activated', 'no')
+            submit_domain(did)
         with open(str(conf), 'w+') as f:
             p2.write(f)
         print('Domain ' + did + ' was initialized: ' + str(conf))
+
+# List orders on account
+if args.list_cert:
+    resp = list_cert()
+    paginate(resp,10)

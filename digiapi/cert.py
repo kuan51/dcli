@@ -14,7 +14,25 @@ headers_post = {"X-DC-DEVKEY" : conf.api_key, "Content-Type" : "application/json
 def list_cert():
     req = requests.get(url, headers=headers_get)
     rest_status(req)
-    return req.json()
+    list = []
+    col = ['Order Num', 'Common Name', 'Status', 'Org id', 'Type', 'Expires']
+    list.append(col)
+    for order in req.json()['orders']:
+        array = []
+        array.append(str(order['id']))
+        if order['certificate'].get('common_name'):
+            array.append(order['certificate']['common_name'])
+        else:
+            array.append('N/A')
+        array.append(order['status'])
+        array.append(str(order['organization']['id']))
+        array.append(order['product']['name'])
+        if order['certificate'].get('valid_till'):
+            array.append(order['certificate']['valid_till'])
+        else:
+            array.append('N/A')
+        list.append(array)
+    return list
 
 def view_cert(ordernum):
     req_url = url + '/' + ordernum
