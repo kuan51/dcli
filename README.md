@@ -1,6 +1,6 @@
 **DigiCert Python Cli Utility README**
 
-*This utility will seek to automate the certificate request process as best as possible. However there are limits to this process. You will need to submit your organization and domains for validation. DigiCert may require your assistance with the identity verification. If you dont hear from them within a day or so, reach out to support@digicert.com with the order number in the subject line.*
+*This utility will seek to automate the certificate request process as best as possible. However there are limits to this process. You will need to submit your organization and domains for validation. DigiCert may require your assistance with the identity verification. If you dont hear from them within a day or so, reach out to validation@digicert.com with the order number in the subject line.*
 
 ## Requirements
 
