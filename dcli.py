@@ -18,12 +18,12 @@ parser.add_argument("--init-dom", help="Validate a domain", action="store_true")
 
 # Argparse Certificate Management Sub Parser
 parser_cert = subparsers.add_parser('crt')
-parser_cert.add_argument("-l", "--list-cert", help="List all orders", action='store_true')
-parser_cert.add_argument("-v", "--view-cert", help="View order details by id")
-parser_cert.add_argument("-n", "--new-cert", help="New order, requires csr", choices=['dv','ov', 'ev', 'cs'])
-parser_cert.add_argument("-r", "--revoke-cert", help="Revoke order")
-parser_cert.add_argument("-e", "--edit-cert", help="Edit order (reissue)")
-parser_cert.add_argument("-d", "--duplicate-cert", help="Create copy of an order with a different CSR")
+parser_cert.add_argument("-l", "--list-crt", help="List all orders", action='store_true')
+parser_cert.add_argument("-v", "--view-crt", help="View order details by id")
+parser_cert.add_argument("-n", "--new-crt", help="New order, requires csr", choices=['dv','ov', 'ev', 'cs'])
+parser_cert.add_argument("-r", "--revoke-crt", help="Revoke order")
+parser_cert.add_argument("-e", "--edit-crt", help="Edit order (reissue)")
+parser_cert.add_argument("-d", "--duplicate-crt", help="Create copy of an order with a different CSR")
 parser_cert.add_argument("-a", "--duplicate-list", help="List the duplicate certificates of an order")
 
 # Argparse Domain Management Sub Parser
@@ -63,11 +63,11 @@ parser_usr.add_argument("-l", "--list-usr", help="List user accounts", action='s
 parser_crypto = subparsers.add_parser('crypto')
 parser_crypto.add_argument('--new-csr', help="Create a new CSR")
 parser_crypto.add_argument('--new-key', help='Create a new private key', choices=['ecc', 'rsa'])
-parser_crypto.add_argument('--decode-cert', help='View encoded details in the certificate')
+parser_crypto.add_argument('--decode-crt', help='View encoded details in the certificate')
 parser_crypto.add_argument('--decode-csr', help='View encoded details in the CSR')
 parser_crypto.add_argument('--test-csr', help='Generate hash of CSR')
 parser_crypto.add_argument('--test-key', help='Generate hash of private key')
-parser_crypto.add_argument('--test-cert', help='Generate hash of certificate')
+parser_crypto.add_argument('--test-crt', help='Generate hash of certificate')
 
 # Parse argument list
 args = parser.parse_args()
