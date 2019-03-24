@@ -98,3 +98,24 @@ def rest_status(req):
             print(msg["message"])
         sys.stdout.write(RESET)
         raise LookupError("Bad API request. Error Code: " + str(req.status_code))
+
+def colorize(color):
+    if color == 'red':
+        color = RED
+    elif color == 'blue':
+        color = BLUE
+    elif color == 'cyan':
+        color = CYAN
+    elif color == 'green':
+        color = GREEN
+    print(color)
+    sys.stdout.write(color)
+
+def colorize_edit(set):
+    if set == 'reset':
+        set = RESET
+    elif set == 'bold':
+        set = BOLD
+    elif set == 'reverse':
+        set = REVERSE
+    sys.stdout.write(set)

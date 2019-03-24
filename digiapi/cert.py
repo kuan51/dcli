@@ -1,5 +1,5 @@
 from digiapi import conf
-from digiapi.conf import confd_cert, rest_status, confd_org, keyd, paginate
+from digiapi.conf import confd_cert, rest_status, confd_org, keyd, paginate, colorize, colorize_edit
 from digiapi.org import get_active_org, view_org
 from digiapi.domain import list_domains, view_domain
 from digiapi.crypto import gen_csr, gen_key
@@ -264,12 +264,17 @@ def new_cert(type):
             print('Successfully placed new order # ' + str(req.json()['id']) + '\n')
     return req.json()
 
-def revoke_cert(oid, comment):
-    req_url = 'https://www.digicert.com/services/v2/certificate/' + oid + '/revoke'
+def revoke_cert(cid, comment):
+    req_url = 'https://www.digicert.com/services/v2/order/certificate/' + cid + '/revoke'
     payload = json.dumps( { 'comments': comment } )
     req = requests.put(req_url, headers=headers_post, data=payload)
     rest_status(req)
-    return req.json()
+    resp = req.json()
+    if resp.get('status'):
+        colorize('cyan')
+        print('A request to revoke order ' + cid + ' was successfully submitted on ' + resp['status'])
+        colorize_edit('reset')
+    return resp
 
 def download_cert(ordernum):
     req_url = 'https://www.digicert.com/services/v2/certificate/' + ordernum + '/download/platform'

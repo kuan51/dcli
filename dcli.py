@@ -247,8 +247,11 @@ if args.init_dom:
 
 # List orders on account
 if args.list_cert:
-    resp = list_cert()
-    paginate(resp,10)
+    try:
+        resp = list_cert()
+        paginate(resp,10)
+    except:
+        raise Exception('Unable to list certificates.')
 
 # View a orders details
 if args.view_cert:
@@ -264,3 +267,11 @@ if args.new_cert:
         new_cert(args.new_cert)
     except:
         raise Exception('Unable to enroll new certificate.')
+
+# Revoke certificate
+if args.revoke_cert:
+    try:
+        cmt = input('Why are you revoking this order? ')
+        revoke_cert(args.revoke_cert, cmt)
+    except:
+        raise Exception('Unable to revoke certificate.')
