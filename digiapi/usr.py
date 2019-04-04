@@ -58,3 +58,9 @@ def verified_usr():
     paginate(list, 10)
     uid = input("Choose a verified user for the org by their id: ")
     return uid
+
+def check_api_key():
+    req_url = url + '/me'
+    req = requests.get(req_url, headers=headers_get)
+    rest_status(req)
+    return req.json()
