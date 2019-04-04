@@ -70,7 +70,6 @@ def page_parse(data, num_row):
 # Print interactive output with pages
 def paginate(data, num_col):
     pages = list(page_parse(data, num_col))
-    print(pages)
     pnum = 0
     while pnum < len(pages):
         widths = [max(map(len, col)) for col in zip(*pages[pnum])]

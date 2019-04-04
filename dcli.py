@@ -289,12 +289,36 @@ def dcli():
                 reissue_cert(args.edit_crt)
             except:
                 raise Exception('Unable to reissue certificate.')
-        # Get  duplicate certificate
+        # Get duplicate certificate
         if args.duplicate_crt:
             try:
                 duplicate_cert(args.duplicate_crt)
             except:
                 raise Exception('Unable to request duplicate certificate.')
+        # List all created duplicates on an order
+        if args.duplicate_list:
+            try:
+                resp = list_duplicates(args.duplicate_list)
+                # Create pages from json
+                list = []
+                col = ['Commmon Name', 'Serial Number', 'Status', 'Date Issued', 'Valid Till', 'Key Size', 'Requested By']
+                list.append(col)
+                for i in resp['certificates']:
+                    array = []
+                    array.append(i['common_name'])
+                    array.append(i['serial_number'])
+                    array.append(i['status'])
+                    array.append(i['valid_from'])
+                    array.append(i['valid_till'])
+                    array.append(str(i['key_size']))
+                    fname = i['firstname']
+                    lname = i['lastname']
+                    usrname = fname + ' ' + lname
+                    array.append(usrname)
+                    list.append(array)
+                paginate(list,10)
+            except:
+                raise Exception('Unable to list duplicate certificates of order ' + str(args.duplicate_list))
     # If dom subparser
     if args.cmd == 'dom':
         print('domain sub parser')
