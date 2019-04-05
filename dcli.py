@@ -2,12 +2,13 @@
 import argparse
 import os
 import json
+import re
 from configparser import ConfigParser
 from pathlib import Path
 from digiapi.conf import api_key, cert_lib, confd, main_conf, confd_org, confd_dom, confd_cert, keyd, page_parse, paginate
 from digiapi.org import url, headers_get, headers_post, view_org, list_org, new_org, submit_org, active_org_val
 from digiapi.cert import url, headers_get, headers_post, list_cert, view_cert, new_cert, revoke_cert, download_cert, download_cert_by_format, reissue_cert, list_duplicates, list_requests, view_request, update_request, duplicate_cert
-from digiapi.domain import list_domains, view_domain, submit_domain, activate_domain, deactivate_domain, do_dcv, test_dns
+from digiapi.domain import list_domains, view_domain, submit_domain, activate_domain, deactivate_domain, do_dcv, test_dns, new_domain
 from digiapi.usr import check_api_key
 
 def dcli():
@@ -24,7 +25,7 @@ def dcli():
     parser_cert = subparsers.add_parser('crt')
     parser_cert.add_argument("-l", "--list-crt", help="List all orders", action='store_true')
     parser_cert.add_argument("-v", "--view-crt", help="View order details by id")
-    parser_cert.add_argument("-n", "--new-crt", help="New order, requires csr", choices=['dv','ov', 'ev', 'cs'])
+    parser_cert.add_argument("-n", "--new-crt", help="New order, requires csr", choices=['ov', 'ev', 'cs', 'evcs'])
     parser_cert.add_argument("-r", "--revoke-crt", help="Revoke order")
     parser_cert.add_argument("-e", "--edit-crt", help="Edit order (reissue)")
     parser_cert.add_argument("-d", "--duplicate-crt", help="Create copy of an order with a different CSR")
@@ -38,7 +39,7 @@ def dcli():
     parser_dom.add_argument("-s", "--submit-dom", help="Submit domain for validation")
     parser_dom.add_argument("-dcv", help="Domain control verification", choices=['txt', 'cname', 'email', 'http'])
     parser_dom.add_argument("-dns", help ="Test DNS to complete DCV", choices=['txt','cname'])
-    parser_dom.add_argument("-n", "--new-dom", help="New domain", action='store_true')
+    parser_dom.add_argument("-n", "--new-dom", help="New domain", choices=['ov','ev'])
     parser_dom.add_argument("-v", "--view-dom", help="View domain details by id")
 
     # Argparse Organization Management Sub Parser
@@ -392,6 +393,36 @@ def dcli():
                 print('Domain ID ' + did + ' has been approved. Status: ' + resp['status'])
             except:
                 raise LookupError('Failed to test DNS records.')
+        # Add a new domain
+        if args.new_dom:
+            print('Org must first be approved for OV or EV to create domain.')
+            regex_test = re.compile('(\w+|-|\*)+(\.{1})(\w+|-)+')
+            dom_name = input('Enter the new domain name: ')
+            while not regex_test.match(dom_name):
+                dom_name = input('Enter a valid domain name: ')
+            list = []
+            col = ['Org ID','Org Name','St Address', 'Validation Status']
+            list.append(col)
+            org_list = list_org('y')
+            for org in org_list['organizations']:
+                array = []
+                array.append(str(org['id']))
+                array.append(org['name'])
+                array.append(org['address'])
+                vals = []
+                if org.get('validations'):
+                    for val in org['validations']:
+                        vals.append(val['type'])
+                array.append(', '.join(vals))
+                list.append(array)
+            paginate(list,10)
+            oid = input('Create domain under which org? [Enter Org ID] ')
+            resp = new_domain(dom_name, oid, args.new_dom)
+            print('Domain ' + dom_name + ' has been created. Domain ID: ' + str(resp['id']))
+        # View domain information by domain id
+        if args.view_dom:
+            resp = view_domain(args.view_dom)
+            paginate(resp,10)
     # If crt subparser
     if args.cmd == 'org':
         print('org sub parser')

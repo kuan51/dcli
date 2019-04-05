@@ -24,7 +24,7 @@ def view_domain(did):
     col = ['ID', 'Name', 'Status', 'DCV Method', 'Org ID']
     list.append(col)
     array = []
-    array.append(resp['id'])
+    array.append(str(resp['id']))
     array.append(resp['name'])
     array.append(resp['status'])
     if resp['dcv_method'] == 'email':
@@ -35,7 +35,7 @@ def view_domain(did):
         array.append('cname')
     elif resp['dcv_method'] == 'http-token':
         array.append('http')
-    array.append(resp['organization']['id'])
+    array.append(str(resp['organization']['id']))
     list.append(array)
     return list
 
