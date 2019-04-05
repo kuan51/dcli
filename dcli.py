@@ -7,7 +7,7 @@ from pathlib import Path
 from digiapi.conf import api_key, cert_lib, confd, main_conf, confd_org, confd_dom, confd_cert, keyd, page_parse, paginate
 from digiapi.org import url, headers_get, headers_post, view_org, list_org, new_org, submit_org, active_org_val
 from digiapi.cert import url, headers_get, headers_post, list_cert, view_cert, new_cert, revoke_cert, download_cert, download_cert_by_format, reissue_cert, list_duplicates, list_requests, view_request, update_request, duplicate_cert
-from digiapi.domain import list_domains, view_domain, submit_domain, activate_domain, deactivate_domain
+from digiapi.domain import list_domains, view_domain, submit_domain, activate_domain, deactivate_domain, do_dcv, test_dns
 from digiapi.usr import check_api_key
 
 def dcli():
@@ -377,6 +377,21 @@ def dcli():
                 resp = submit_domain(args.submit_dom)
             except:
                 raise LookupError('Unable to submit domain for validation.')
+        # Domain control verification
+        if args.dcv:
+            try:
+                do_dcv(args.dcv)
+            except:
+                raise LookupError('Unable to submit domain for domain control verification.')
+        # Check DNS for DCV
+        if args.dns:
+            try:
+                token = input('Enter the random string: ')
+                did = input('Enter the domain ID: ')
+                resp = test_dns(did, args.dns, token)
+                print('Domain ID ' + did + ' has been approved. Status: ' + resp['status'])
+            except:
+                raise LookupError('Failed to test DNS records.')
     # If crt subparser
     if args.cmd == 'org':
         print('org sub parser')
