@@ -35,7 +35,7 @@ def dcli():
     parser_dom.add_argument("-l", "--list-dom", help="List active domains", action="store_true")
     parser_dom.add_argument("-a", "--activate-dom", help="Activate domain")
     parser_dom.add_argument("-d", "--deactivate-dom", help="Deactivate domain")
-    parser_dom.add_argument("-s", "--submit-dom", help="Submit domain for validation", choices=['dv','ov','ev'])
+    parser_dom.add_argument("-s", "--submit-dom", help="Submit domain for validation")
     parser_dom.add_argument("-dcv", help="Domain control verification", choices=['txt', 'cname', 'email', 'http'])
     parser_dom.add_argument("-dns", help ="Test DNS to complete DCV", choices=['txt','cname'])
     parser_dom.add_argument("-n", "--new-dom", help="New domain", action='store_true')
@@ -371,6 +371,12 @@ def dcli():
                     print('Domain ' + str(args.deactivate_dom) + ' has been deactivated.')
             except:
                 raise LookupError('Unable to deactivate the domain with Digicert.')
+        # Submit domain for validation
+        if args.submit_dom:
+            try:
+                resp = submit_domain(args.submit_dom)
+            except:
+                raise LookupError('Unable to submit domain for validation.')
     # If crt subparser
     if args.cmd == 'org':
         print('org sub parser')

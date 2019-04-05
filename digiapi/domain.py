@@ -81,6 +81,8 @@ def submit_domain(did):
     req_url = url + '/' + did + '/validation'
     req = requests.post(req_url, headers=headers_post, data=payload)
     rest_status(req)
+    if req.status_code == 204:
+        print('Domain submitted for ' + type + ' validation.')
     return req
 
 def dcv_methods():
