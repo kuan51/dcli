@@ -321,7 +321,40 @@ def dcli():
                 raise Exception('Unable to list duplicate certificates of order ' + str(args.duplicate_list))
     # If dom subparser
     if args.cmd == 'dom':
-        print('domain sub parser')
+        # List Domains
+        if args.list_dom:
+            try:
+                resp = list_domains()
+                list = []
+                col = ['Domain ID','Domain Name','Parent Org','Parent Org ID','DCV Method','Ready For']
+                list.append(col)
+                for domain in resp['domains']:
+                    if domain['is_active'] == True:
+                        array = []
+                        array.append(str(domain['id']))
+                        array.append(domain['name'])
+                        array.append(domain['organization']['name'])
+                        array.append(str(domain['organization']['id']))
+                        if domain.get('dcv_method'):
+                            if domain['dcv_method'] == 'dns-cname-token':
+                                array.append('cname')
+                            elif domain['dcv_method'] == 'dns-txt-token':
+                                array.append('txt')
+                            elif domain['dcv_method'] == 'http-token':
+                                array.append('http')
+                            elif domain['dcv_method'] == 'email':
+                                array.append('email')
+                        else:
+                            array.append('')
+                        array_val = []
+                        for val in domain['validations']:
+                            if val['status'] == 'active':
+                                array_val.append(val['type'])
+                        array.append(', '.join(array_val))
+                        list.append(array)
+                paginate(list,10)
+            except:
+                raise LookupError('Unable to list domains on account.')
     # If crt subparser
     if args.cmd == 'org':
         print('org sub parser')

@@ -83,10 +83,7 @@ def paginate(data, num_col):
             pnum -= 1
         elif cursor == 'n':
             pnum += 1
-        elif cursor == 'q':
-            return False
         else:
-            print('Press "n", "b", or "q"')
             break
 # Check Digicert API response for errors
 def rest_status(req):
