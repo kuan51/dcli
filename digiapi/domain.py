@@ -42,7 +42,7 @@ def view_domain(did):
 def activate_domain(did):
     req_url = url + '/' + did + '/activate'
     req = requests.put(req_url, headers=headers_get)
-    req.raise_for_status()
+    rest_status(req)
     return req
 
 def deactivate_domain(did):

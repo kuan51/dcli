@@ -7,7 +7,7 @@ from pathlib import Path
 from digiapi.conf import api_key, cert_lib, confd, main_conf, confd_org, confd_dom, confd_cert, keyd, page_parse, paginate
 from digiapi.org import url, headers_get, headers_post, view_org, list_org, new_org, submit_org, active_org_val
 from digiapi.cert import url, headers_get, headers_post, list_cert, view_cert, new_cert, revoke_cert, download_cert, download_cert_by_format, reissue_cert, list_duplicates, list_requests, view_request, update_request, duplicate_cert
-from digiapi.domain import list_domains, view_domain, submit_domain
+from digiapi.domain import list_domains, view_domain, submit_domain, activate_domain, deactivate_domain
 from digiapi.usr import check_api_key
 
 def dcli():
@@ -33,8 +33,8 @@ def dcli():
     # Argparse Domain Management Sub Parser
     parser_dom = subparsers.add_parser('dom')
     parser_dom.add_argument("-l", "--list-dom", help="List active domains", action="store_true")
-    parser_dom.add_argument("-a", "--activate-dom", help="Activate domain", action="store_true")
-    parser_dom.add_argument("-d", "--deactivate-dom", help="Deactivate domain", action="store_true")
+    parser_dom.add_argument("-a", "--activate-dom", help="Activate domain")
+    parser_dom.add_argument("-d", "--deactivate-dom", help="Deactivate domain")
     parser_dom.add_argument("-s", "--submit-dom", help="Submit domain for validation", choices=['dv','ov','ev'])
     parser_dom.add_argument("-dcv", help="Domain control verification", choices=['txt', 'cname', 'email', 'http'])
     parser_dom.add_argument("-dns", help ="Test DNS to complete DCV", choices=['txt','cname'])
@@ -355,6 +355,22 @@ def dcli():
                 paginate(list,10)
             except:
                 raise LookupError('Unable to list domains on account.')
+        # Activate domain
+        if args.activate_dom:
+            try:
+                resp = activate_domain(args.activate_dom)
+                if resp.status_code == 204:
+                    print('Domain ' + str(args.activate_dom) + ' has been activated.')
+            except:
+                raise LookupError('Unable to activate the domain with Digicert.')
+        # Deactivate domain
+        if args.deactivate_dom:
+            try:
+                resp = deactivate_domain(args.deactivate_dom)
+                if resp.status_code == 204:
+                    print('Domain ' + str(args.deactivate_dom) + ' has been deactivated.')
+            except:
+                raise LookupError('Unable to deactivate the domain with Digicert.')
     # If crt subparser
     if args.cmd == 'org':
         print('org sub parser')
