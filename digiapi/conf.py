@@ -77,7 +77,6 @@ def paginate(data, num_col):
             print("\t\t".join((val.ljust(width) for val, width in zip(row, widths))))
         print("\nPage " + str(pnum) + ": ")
         cursor = input('Press [n]ext, [b]ack, or [enter] to continue. ')
-        print('-' * sum(widths))
         if cursor == 'b':
             pnum -= 1
         elif cursor == 'n':

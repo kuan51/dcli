@@ -446,8 +446,14 @@ def dcli():
                 raise LookupError('Unable to vretrieve org information from Digicert.')
 
     # If crt subparser
-    #if args.cmd == 'req':
+    if args.cmd == 'req':
         # List requests
+        if args.list_req:
+            try:
+                resp = list_requests('y')
+                paginate(resp,10)
+            except:
+                raise LookupError('Unable to retrieve request information from Digicert.')
         # View request
         # Reject pending request
         # Approve pending request

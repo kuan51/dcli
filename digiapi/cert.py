@@ -564,11 +564,34 @@ def duplicate_cert(cid):
     colorize_edit('reset')
 
 # List all pending requests
-def list_requests():
+def list_requests(pages):
     req_url = 'https://www.digicert.com/services/v2/request'
-    req = requests.get(req_url, headers=headers_get)
-    rest_status(req)
-    return req.json()
+    reqs = requests.get(req_url, headers=headers_get)
+    rest_status(reqs)
+    if pages == 'y':
+        list = []
+        col = ['Request ID', 'Date Requested', 'Status', 'Type', 'Order ID', 'Requested By', 'Approved By']
+        list.append(col)
+        for req in reqs.json()['requests']:
+            array = []
+            array.append(str(req['id']))
+            array.append(req['date'])
+            array.append(req['status'])
+            array.append(req['type'])
+            array.append(str(req['order']['id']))
+            requester_fname = req['requester']['first_name']
+            requester_lname = req['requester']['last_name']
+            requester_name = requester_fname + ' ' + requester_lname
+            array.append(requester_name)
+            if req.get('processor'):
+                approver_fname = req['processor']['first_name']
+                approver_lname = req['processor']['last_name']
+                approver_name = approver_fname + ' ' + approver_lname
+            array.append(approver_name)
+            list.append(array)
+        return list
+    else:
+        return reqs.json()
 
 # View a specific pending request
 def view_request(rid):
