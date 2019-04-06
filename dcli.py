@@ -455,6 +455,28 @@ def dcli():
             except:
                 raise LookupError('Unable to retrieve request information from Digicert.')
         # View request
+        if args.view_req:
+            req = view_request(args.view_req)
+            list = []
+            col = ['Request ID', 'Date Requested', 'Status', 'Type', 'Order ID', 'Requested By', 'Approved By']
+            list.append(col)
+            array = []
+            array.append(str(req['id']))
+            array.append(req['date'])
+            array.append(req['status'])
+            array.append(req['type'])
+            array.append(str(req['order']['id']))
+            requester_fname = req['requester']['first_name']
+            requester_lname = req['requester']['last_name']
+            requester_name = requester_fname + ' ' + requester_lname
+            array.append(requester_name)
+            if req.get('processor'):
+                approver_fname = req['processor']['first_name']
+                approver_lname = req['processor']['last_name']
+                approver_name = approver_fname + ' ' + approver_lname
+            array.append(approver_name)
+            list.append(array)
+            paginate(list,10)
         # Reject pending request
         # Approve pending request
     # If crt subparser
