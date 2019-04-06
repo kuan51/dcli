@@ -17,14 +17,32 @@ def view_org(oid):
     rest_status(req)
     return req.json()
 
-def list_org(val_list):
-    if val_list == 'y':
+def list_org(val,list):
+    if val == 'y':
         req_url = url + '?include_validation=true'
     else:
         req_url = url
     req = requests.get(req_url, headers=headers_get)
     rest_status(req)
-    return req.json()
+    if list == 'y':
+        list_array = []
+        col = ['Org ID', 'Org Name', 'Address', 'Activated', 'Validated For']
+        list_array.append(col)
+        for org in req.json()['organizations']:
+            array = []
+            array.append(str(org['id']))
+            array.append(org['name'])
+            array.append(org['address'])
+            array.append(str(org['is_active']))
+            vals = []
+            if org.get('validations'):
+                for val in org['validations']:
+                    vals.append(val['type'])
+            array.append(', '.join(vals))
+            list_array.append(array)
+        return list_array
+    else:
+        return req.json()
 
 def new_org():
     # Collect org details

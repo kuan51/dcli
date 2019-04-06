@@ -46,8 +46,6 @@ def dcli():
     parser_org = subparsers.add_parser('org')
     parser_org.add_argument("-l", "--list-org", help="List organizations", action="store_true")
     parser_org.add_argument("-v", "--view-org", help="View details of organization by org id")
-    parser_org.add_argument("-s", "--submit-org", help="Submit organization for validation", choices=['ov', 'ev', 'ovcs', 'evcs', 'ds'])
-    parser_org.add_argument("-n", "--new-org", help="New organization", action="store_true")
 
     # argparse Request Management Sub Parser
     parser_req = subparsers.add_parser('req')
@@ -395,40 +393,64 @@ def dcli():
                 raise LookupError('Failed to test DNS records.')
         # Add a new domain
         if args.new_dom:
-            print('Org must first be approved for OV or EV to create domain.')
-            regex_test = re.compile('(\w+|-|\*)+(\.{1})(\w+|-)+')
-            dom_name = input('Enter the new domain name: ')
-            while not regex_test.match(dom_name):
-                dom_name = input('Enter a valid domain name: ')
-            list = []
-            col = ['Org ID','Org Name','St Address', 'Validation Status']
-            list.append(col)
-            org_list = list_org('y')
-            for org in org_list['organizations']:
-                array = []
-                array.append(str(org['id']))
-                array.append(org['name'])
-                array.append(org['address'])
-                vals = []
-                if org.get('validations'):
-                    for val in org['validations']:
-                        vals.append(val['type'])
-                array.append(', '.join(vals))
-                list.append(array)
-            paginate(list,10)
-            oid = input('Create domain under which org? [Enter Org ID] ')
-            resp = new_domain(dom_name, oid, args.new_dom)
-            print('Domain ' + dom_name + ' has been created. Domain ID: ' + str(resp['id']))
+            try:
+                print('Org must first be approved for OV or EV to create domain.')
+                regex_test = re.compile('(\w+|-|\*)+(\.{1})(\w+|-)+')
+                dom_name = input('Enter the new domain name: ')
+                while not regex_test.match(dom_name):
+                    dom_name = input('Enter a valid domain name: ')
+                list = []
+                col = ['Org ID','Org Name','St Address', 'Validation Status']
+                list.append(col)
+                org_list = list_org('y','y')
+                paginate(org_list,10)
+                oid = input('Create domain under which org? [Enter Org ID] ')
+                resp = new_domain(dom_name, oid, args.new_dom)
+                print('Domain ' + dom_name + ' has been created. Domain ID: ' + str(resp['id']))
+            except:
+                raise LookupError('Unable to create new domain with Digicert.')
         # View domain information by domain id
         if args.view_dom:
-            resp = view_domain(args.view_dom)
-            paginate(resp,10)
+            try:
+                resp = view_domain(args.view_dom)
+                paginate(resp,10)
+            except:
+                raise LookupError('Unable to grab domain information from Digicert.')
     # If crt subparser
     if args.cmd == 'org':
-        print('org sub parser')
+        # List organization
+        if args.list_org:
+            try:
+                resp = list_org('y','y')
+                paginate(resp,10)
+            except:
+                raise LookupError('Unable to retrieve information from Digicert.')
+        # View organization details
+        if args.view_org:
+            try:
+                resp = view_org(args.view_org)
+                list = []
+                col = ['Org ID', 'Org Name', 'Address', 'Phone', 'Org Contact', 'Activated']
+                list.append(col)
+                array = []
+                array.append(str(resp['id']))
+                array.append(resp['name'])
+                array.append(resp['address'])
+                array.append(resp['telephone'])
+                contact = resp['organization_contact']['first_name'] + ' ' + resp['organization_contact']['last_name']
+                array.append(contact)
+                array.append(str(resp['is_active']))
+                list.append(array)
+                paginate(list,10)
+            except:
+                raise LookupError('Unable to vretrieve org information from Digicert.')
+
     # If crt subparser
-    if args.cmd == 'req':
-        print('req sub parser')
+    #if args.cmd == 'req':
+        # List requests
+        # View request
+        # Reject pending request
+        # Approve pending request
     # If crt subparser
     if args.cmd == 'usr':
         # Check API Key permissions
