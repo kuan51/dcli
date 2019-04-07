@@ -64,14 +64,14 @@ def dcli():
     parser_usr.add_argument("-c", "--check-api", help="Check Digicert API key for permissions.", action="store_true")
 
     # Argparse Cryptography Sub Parser
-    parser_crypto = subparsers.add_parser('crypto')
-    parser_crypto.add_argument('--new-csr', help="Create a new CSR")
-    parser_crypto.add_argument('--new-key', help='Create a new private key', choices=['ecc', 'rsa'])
-    parser_crypto.add_argument('--decode-crt', help='View encoded details in the certificate')
-    parser_crypto.add_argument('--decode-csr', help='View encoded details in the CSR')
-    parser_crypto.add_argument('--test-csr', help='Generate hash of CSR')
-    parser_crypto.add_argument('--test-key', help='Generate hash of private key')
-    parser_crypto.add_argument('--test-crt', help='Generate hash of certificate')
+    #parser_crypto = subparsers.add_parser('crypto')
+    #parser_crypto.add_argument('--new-csr', help="Create a new CSR")
+    #parser_crypto.add_argument('--new-key', help='Create a new private key', choices=['ecc', 'rsa'])
+    #parser_crypto.add_argument('--decode-crt', help='View encoded details in the certificate')
+    #parser_crypto.add_argument('--decode-csr', help='View encoded details in the CSR')
+    #parser_crypto.add_argument('--test-csr', help='Generate hash of CSR')
+    #parser_crypto.add_argument('--test-key', help='Generate hash of private key')
+    #parser_crypto.add_argument('--test-crt', help='Generate hash of certificate')
 
     # Parse argument list
     args = parser.parse_args()
@@ -120,7 +120,7 @@ def dcli():
 
     # Validate org
     if args.init_org:
-        reval = input('Is this the FIRST time registering the org with Digicert? ')
+        reval = input('Is this the FIRST time registering the org with Digicert? (Create new org) [y/n] ')
         if reval == 'y':
             new_org()
         elif reval == 'n':
@@ -560,8 +560,8 @@ def dcli():
             except:
                 raise Exception('Unable to check status of API key.')
     # If crt subparser
-    if args.cmd == 'crypto':
-        print('crypto sub parser')
+    #if args.cmd == 'crypto':
+    #    print('crypto sub parser')
 # Run application
 if __name__ == '__main__':
     dcli()
