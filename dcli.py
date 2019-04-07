@@ -3,9 +3,9 @@ import argparse
 import os
 import json
 import re
-from configparser import ConfigParser
+import configparser
 from pathlib import Path
-from digiapi.conf import api_key, cert_lib, confd, main_conf, confd_org, confd_dom, confd_cert, keyd, page_parse, paginate
+from digiapi.conf import api_key, cert_lib, confd, main_conf, confd_org, confd_dom, confd_cert, keyd, page_parse, paginate, colorize, colorize_edit
 from digiapi.org import url, headers_get, headers_post, view_org, list_org, new_org, submit_org, active_org_val
 from digiapi.cert import url, headers_get, headers_post, list_cert, view_cert, new_cert, revoke_cert, download_cert, download_cert_by_format, reissue_cert, list_duplicates, list_requests, view_request, update_request, duplicate_cert
 from digiapi.domain import list_domains, view_domain, submit_domain, activate_domain, deactivate_domain, do_dcv, test_dns, new_domain
@@ -49,10 +49,10 @@ def dcli():
 
     # argparse Request Management Sub Parser
     parser_req = subparsers.add_parser('req')
-    parser_req.add_argument('-l', '--list-req', help='List all pending requests', action='store_true')
+    parser_req.add_argument('-l', '--list-req', help='List all pending requests', choices=['pending','all'])
     parser_req.add_argument('-v', '--view-req', help='View request details')
-    parser_req.add_argument('-r', '--reject-req', help='Reject a pending certificate request.')
-    parser_req.add_argument('-a', '--approve-req', help='Approve a pending certificate request.')
+    parser_req.add_argument('-r', '--reject-req', help='Reject a pending certificate request by id.')
+    parser_req.add_argument('-a', '--approve-req', help='Approve a pending certificate request by id.')
 
     # Argparse User Management Sub Parser
     parser_usr = subparsers.add_parser('usr')
@@ -450,37 +450,70 @@ def dcli():
         # List requests
         if args.list_req:
             try:
-                resp = list_requests('y')
-                paginate(resp,10)
+                if args.list_req == 'pending':
+                    resp = list_requests('y','y')
+                    paginate(resp,10)
+                if args.list_req == 'all':
+                    resp = list_requests('y','n')
+                    paginate(resp,10)
             except:
                 raise LookupError('Unable to retrieve request information from Digicert.')
         # View request
         if args.view_req:
-            req = view_request(args.view_req)
-            list = []
-            col = ['Request ID', 'Date Requested', 'Status', 'Type', 'Order ID', 'Requested By', 'Approved By']
-            list.append(col)
-            array = []
-            array.append(str(req['id']))
-            array.append(req['date'])
-            array.append(req['status'])
-            array.append(req['type'])
-            array.append(str(req['order']['id']))
-            requester_fname = req['requester']['first_name']
-            requester_lname = req['requester']['last_name']
-            requester_name = requester_fname + ' ' + requester_lname
-            array.append(requester_name)
-            if req.get('processor'):
-                approver_fname = req['processor']['first_name']
-                approver_lname = req['processor']['last_name']
-                approver_name = approver_fname + ' ' + approver_lname
-            array.append(approver_name)
-            list.append(array)
-            paginate(list,10)
+            try:
+                req = view_request(args.view_req)
+                list = []
+                col = ['Request ID', 'Date Requested', 'Status', 'Type', 'Order ID', 'Requested By', 'Approved By']
+                list.append(col)
+                array = []
+                array.append(str(req['id']))
+                array.append(req['date'])
+                array.append(req['status'])
+                array.append(req['type'])
+                array.append(str(req['order']['id']))
+                requester_fname = req['requester']['first_name']
+                requester_lname = req['requester']['last_name']
+                requester_name = requester_fname + ' ' + requester_lname
+                array.append(requester_name)
+                if req.get('processor'):
+                    approver_fname = req['processor']['first_name']
+                    approver_lname = req['processor']['last_name']
+                    approver_name = approver_fname + ' ' + approver_lname
+                    array.append(approver_name)
+                else:
+                    approver_name = ' '
+                    array.append(approver_name)
+                list.append(array)
+                paginate(list,10)
+            except:
+                raise LookupError('Unable to retrieve request information from Digicert.')
         # Reject pending request
+        if args.reject_req:
+            try:
+                cmt = input('Why are you rejecting this request? ')
+                update_request(args.reject_req,'rejected',cmt)
+                colorize('cyan')
+                print('Successfully rejected request.')
+                colorize_edit('reset')
+            except:
+                raise LookupError('Unable to update request status with Digicert.')
         # Approve pending request
+        if args.approve_req:
+            try:
+                cmt = input('Why are you approving this request? ')
+                update_request(args.approve_req,'approved',cmt)
+                colorize('cyan')
+                print('Successfully approved request.')
+                colorize_edit('reset')
+            except:
+                raise LookupError('Unable to update request status with Digicert.')
     # If crt subparser
     if args.cmd == 'usr':
+        # Add a new user
+        # Edit an existing user
+        # View information about a user
+        # Delete a user
+        # List all users on account
         # Check API Key permissions
         if args.check_api:
             try:
