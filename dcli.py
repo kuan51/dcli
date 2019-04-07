@@ -9,7 +9,7 @@ from digiapi.conf import api_key, cert_lib, confd, main_conf, confd_org, confd_d
 from digiapi.org import url, headers_get, headers_post, view_org, list_org, new_org, submit_org, active_org_val
 from digiapi.cert import url, headers_get, headers_post, list_cert, view_cert, new_cert, revoke_cert, download_cert, download_cert_by_format, reissue_cert, list_duplicates, list_requests, view_request, update_request, duplicate_cert
 from digiapi.domain import list_domains, view_domain, submit_domain, activate_domain, deactivate_domain, do_dcv, test_dns, new_domain
-from digiapi.usr import check_api_key
+from digiapi.usr import check_api_key, new_usr, edit_usr, view_usr, delete_usr, list_usr
 
 def dcli():
     # Main ArgParse Parser
@@ -59,7 +59,7 @@ def dcli():
     parser_usr.add_argument("-n", "--new-usr", help="New user account", action='store_true')
     parser_usr.add_argument("-e", "--edit-usr", help="Edit user account")
     parser_usr.add_argument("-v", "--view-usr", help="View existing user account")
-    parser_usr.add_argument("-d", "--del-usr", help="Delete user account")
+    parser_usr.add_argument("-d", "--delete-usr", help="Delete user account")
     parser_usr.add_argument("-l", "--list-usr", help="List user accounts", action="store_true")
     parser_usr.add_argument("-c", "--check-api", help="Check Digicert API key for permissions.", action="store_true")
 
@@ -510,10 +510,36 @@ def dcli():
     # If crt subparser
     if args.cmd == 'usr':
         # Add a new user
+        if args.new_usr:
+            try:
+                resp = new_usr()
+            except:
+                raise LookupError('Unable to create new user with Digicert.')
         # Edit an existing user
+        if args.edit_usr:
+            try:
+                edit_usr(args.edit_usr)
+            except:
+                raise LookupError('Unable to edit user information with Digicert.')
         # View information about a user
+        if args.view_usr:
+            try:
+                view_usr(args.view_usr)
+            except:
+                raise LookupError('Unable to retrieve user information from Digicert.')
         # Delete a user
+        if args.delete_usr:
+            try:
+                delete_usr(args.del_usr)
+            except:
+                raise LookupError('Unable to delete user from the Digicert account.')
         # List all users on account
+        if args.list_usr:
+            try:
+                resp = list_usr('y')
+                paginate(resp,10)
+            except:
+                raise LookupError('Unable to retrieve user information from Digicert.')
         # Check API Key permissions
         if args.check_api:
             try:
