@@ -22,7 +22,7 @@ You will need to install the following dependencies using pip:
 1. Download the utility to a folder where you would like to configure the application. It is recommended to use an empty folder.
 2. The application can be executed as a script **./dcli.py -h** on Mac or Linux where python is already installed. If you are on windows, configure python as a system variable and then open a command prompt and run **python3.exe [filepath_to_app]/dcli.py -h**
 
-*Refer to the following guide for help configuring python as a system variable on Windows:
+*Refer to the following guide for help configuring python as a system variable on Windows: https://superuser.com/questions/143119/how-do-i-add-python-to-the-windows-path*
 
 ---
 
