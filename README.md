@@ -41,7 +41,7 @@ You will need to install the following dependencies using pip:
 
 *The organization must be approved before creating the domain.*
 
-*You cannot use --init-dom to create a new domain. Use --new-dom if you want to create a new domain. --init-dom will initialize an existing domain by creating a configuration file in conf.d and submitting the domain for validation with Digicert. Your domain must be initialized before you can request a certificate for it.*
+*You cannot use **--init-dom** to create a new domain. Use **--new-dom** if you want to create a new domain. **--init-dom** will initialize an existing domain by creating a configuration file in conf.d and submitting the domain for validation with Digicert. Your domain must be initialized before you can request a certificate for it.*
 
 1. Create the domain in the account with **--init-dom**.
 2. Pick a domain to submit for validation by entering its domain id when prompted.
