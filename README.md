@@ -11,11 +11,13 @@
 3. Python3
 
 ## Dependencies
-You will need to install the following dependencies using pip:
+You will need to install the following dependencies
 
 1. configparser **pip install configparser**
 2. requests **pip install requests**
 3. cryptography **pip install cryptography**
+
+or you can install in one step with **pip install -r requirements.txt**
 
 ## Installation
 
