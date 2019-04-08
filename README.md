@@ -64,7 +64,7 @@ or you can install in one step with **pip install -r requirements.txt**
 
 *You must run **--init-org** and **--init-dom** before you can place an order for a certificate. If possible, complete the domain approval first by DNS txt or cname. See **-dns** and **-dcv**. This will allow your order to be processed faster.*
 
-1. Once the domain and org are both 'initialized', you can begin requesting certificates with **--new-cert [ov/ev]**. It will show you a list of validated organizations ready for use. Type the org id and press enter.
+1. Once the domain and org are both 'initialized', you can begin requesting certificates with **--new-crt [ov/ev]**. It will show you a list of validated organizations ready for use. Type the org id and press enter.
 3. A list of validated domains will be shown, *but you can enter any valid domain or sub-domain.* Type the common name you want to use.
 4. A private will be generated. 2048 is the current minimum and 4096 is the highest. Most modern devices can support 4096 and this is the recommended choice for those security oriented. 2048 is recommended for compatibility and supporting legacy devices.
 5. A CSR will also be generated for your order. Enter the country, state/province, and city as prompted.
