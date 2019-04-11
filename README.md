@@ -71,3 +71,68 @@ or you can install in one step with **pip install -r requirements.txt**
 6. Choose a signature hash algorithm. *sha256* is a good default, but it can be increased to *sha512* for the security oriented.
 7. Pick how long the certificate is valid for. 1 or 2 years. Use option 3 for a custom expiration date with the format *YYYY-MM-DD*.
 8. Choose a file format. Choose *p7b* for Windows, *pem* for Apache,  *pem bundle* for nginx or tomcat. Select *other* if you are unsure.
+
+---
+
+## Certificate Sub Command
+
+### crt --list-crt
+Lists all orders on the Digicert account. 
+
+### crt --view-crt [order number]
+View the information for a specific order.
+
+### crt --new-crt [ov,ev,cs,evcs]
+Place a new order with Digicert. Pick by the type of order.
+* ov = Organization Validated
+* ev = Extended Validation
+* cs = Code Signing
+* evcs = Extended Validation Code Signing
+
+### crt --revoke-crt [order number]
+Revoke an order by its Digicert order number. See [here](https://www.digicert.com/digital-certificate-guarantee.htm) for more info on Digicert's refund policy.
+
+### crt --edit-crt [order number]
+Reissue an order with Digicert to change the organization, common name, or SANs.
+
+### crt --duplicate-crt [order number]
+Create a copy of an existing order with a new CSR. This allows you to create multiple certificates under the same order, but with different private keys. Using a unique keypair on each server is a recommended best practice. All Digicert products **except the Basic Standard Plus** allow for the creation of a duplicate.
+
+### crt --duplicate-list [order number]
+List all of the existing duplicates under an order.
+
+---
+
+## Domain Sub Command
+
+### dom --list-dom
+List all of the domains on the account.
+
+### dom --activate-dom [domain id]
+Activate a domain and allow SSL certificates to be purchased for it.
+
+### dom --deactivate-dom [domain id]
+Deactivate a domain. SSL certificates cannot be ordered for this domain while deactivated.
+
+### dom --submit-dom [ov,ev,cs,evcs]
+Submit a domain for validation. You must submit the domain's organization for validation first.
+* ov = Organization Validated
+* ev = Extended Validation
+* cs = Code Signing
+* evcs = Extended Validation Code Signing
+
+### dom -dcv [txt,cname,email,http]
+Choose one of the 4 methods for proving your control over the a domain to Digicert.
+* txt = Returns a TXT record you can set up in your public DNS server.
+* cname = Returns a CNAME record you can set up in your public DNS server.
+* email = Digicert will send emails to admin@, administrator@, hostmaster@, postmaster@, and webmaster@ for all orders. They can also send it to the email in your domains WHOIS record, but you will want to contact their validation department for help with the WHOIS.
+* http = Returns a URL and a random value. Set up a webpage at the provided URL where the contents of the txt document is the random value.
+
+### dom -dns [txt,cname]
+You will need the random value to complete this step. Once you have set up the TXT or CNAME record in your DNS, you can test for its presence with this command. If Digicert can see the record, then it will approve your domain for issuing SSL certificates.
+
+### dom --new-dom [ov,ev]
+Create a new domain in your Digicert account. 
+
+### dom --view-dom [domain id]
+View information for an existing domain.
