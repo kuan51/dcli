@@ -90,7 +90,7 @@ Place a new order with Digicert. Pick by the type of order.
 * evcs = Extended Validation Code Signing
 
 ### crt --revoke-crt [order number]
-Revoke an order by its Digicert order number. See [here](https://www.digicert.com/digital-certificate-guarantee.htm) for more info on Digicert's refund policy.
+Revoke an order by its Digicert order number. See https://www.digicert.com/digital-certificate-guarantee.htm for more info on Digicert's refund policy.
 
 ### crt --edit-crt [order number]
 Reissue an order with Digicert to change the organization, common name, or SANs.
