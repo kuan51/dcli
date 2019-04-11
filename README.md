@@ -16,6 +16,7 @@ You will need to install the following dependencies using pip:
 1. configparser **pip install configparser**
 2. requests **pip install requests**
 3. cryptography **pip install cryptography**
+4. pycountry **pip install pycountry**
 
 ## Installation
 
