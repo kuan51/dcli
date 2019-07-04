@@ -7,6 +7,7 @@ python-env
 api.key
 conf.d/
 key.d/
+venv*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
