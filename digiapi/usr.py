@@ -14,7 +14,7 @@ def list_usr(pages):
     rest_status(req)
     resp = req.json()
     list = []
-    col = ['Usr ID', 'Name', 'Email', 'Job Title']
+    col = ['Usr ID', 'Usr Name', 'Email', 'Job Title']
     list.append(col)
     for usr in resp["users"]:
         array = []
@@ -92,9 +92,8 @@ def new_usr():
         req = requests.post(url, headers=headers_post, data=payload)
         rest_status(req)
         if req.status_code == 201:
-            colorize('green')
+            colorize('cyan')
             print('Successfully created new user. New User ID: ' + str(req.json()['id']))
-            print('\n')
             colorize_edit('reset')
         else:
             colorize('red')
@@ -102,7 +101,7 @@ def new_usr():
             colorize_edit('reset')
     else:
         colorize('red')
-        print("Username is taken. Try a different one.\n")
+        print("Username is taken. Try a different one.")
         colorize_edit('reset')
 
 def check_usr(username):
@@ -123,8 +122,8 @@ def delete_usr(uid):
     req = requests.delete(req_url, headers= headers_get)
     rest_status(req)
     if req.status_code == 204:
-        colorize('green')
-        print('Successfully deleted user.\n')
+        colorize('cyan')
+        print('Successfully deleted user.')
         colorize_edit('reset')
 
 def verified_usr():
@@ -168,6 +167,6 @@ def edit_usr(uid):
     req = requests.put(req_url, headers=headers_post, data=payload)
     rest_status(req)
     if req.status_code == 204:
-        colorize('green')
-        print('Successfully updated user.\n')
+        colorize('cyan')
+        print('Successfully updated user.')
         colorize_edit('reset')

@@ -2,15 +2,14 @@
 import argparse
 import os
 import json
+import re
 import configparser
-from cryptography.hazmat.primitives import serialization
 from pathlib import Path
-from digiapi.conf import api_key, cert_lib, confd, main_conf, confd_org, confd_dom, confd_cert, keyd, page_parse, paginate, colorize, colorize_edit, regex_test
+from digiapi.conf import api_key, cert_lib, confd, main_conf, confd_org, confd_dom, confd_cert, keyd, page_parse, paginate, colorize, colorize_edit
 from digiapi.org import url, headers_get, headers_post, view_org, list_org, new_org, submit_org, active_org_val
 from digiapi.cert import url, headers_get, headers_post, list_cert, view_cert, new_cert, revoke_cert, download_cert, download_cert_by_format, reissue_cert, list_duplicates, list_requests, view_request, update_request, duplicate_cert
 from digiapi.domain import list_domains, view_domain, submit_domain, activate_domain, deactivate_domain, do_dcv, test_dns, new_domain
 from digiapi.usr import check_api_key, new_usr, edit_usr, view_usr, delete_usr, list_usr
-from digiapi.crypto import gen_custom_csr, gen_key, decode_cert
 
 def dcli():
     # Main ArgParse Parser
@@ -65,14 +64,14 @@ def dcli():
     parser_usr.add_argument("-c", "--check-api", help="Check Digicert API key for permissions.", action="store_true")
 
     # Argparse Cryptography Sub Parser
-    parser_crypto = subparsers.add_parser('crypto')
-    parser_crypto.add_argument('--new-csr', help="Create a new CSR and private key", choices=['ecc', 'rsa'])
-    parser_crypto.add_argument('--new-key', help='Create a new private key', choices=['ecc', 'rsa'])
-    parser_crypto.add_argument('--decode-crt', help='View encoded details in the certificate')
-    parser_crypto.add_argument('--decode-csr', help='View encoded details in the CSR')
-    parser_crypto.add_argument('--test-csr', help='Generate hash of CSR')
-    parser_crypto.add_argument('--test-key', help='Generate hash of private key')
-    parser_crypto.add_argument('--test-crt', help='Generate hash of certificate')
+    #parser_crypto = subparsers.add_parser('crypto')
+    #parser_crypto.add_argument('--new-csr', help="Create a new CSR")
+    #parser_crypto.add_argument('--new-key', help='Create a new private key', choices=['ecc', 'rsa'])
+    #parser_crypto.add_argument('--decode-crt', help='View encoded details in the certificate')
+    #parser_crypto.add_argument('--decode-csr', help='View encoded details in the CSR')
+    #parser_crypto.add_argument('--test-csr', help='Generate hash of CSR')
+    #parser_crypto.add_argument('--test-key', help='Generate hash of private key')
+    #parser_crypto.add_argument('--test-crt', help='Generate hash of certificate')
 
     # Parse argument list
     args = parser.parse_args()
@@ -96,7 +95,7 @@ def dcli():
         if main_conf.exists():
             os.remove(str(main_conf.resolve()))
             # Create init.conf
-            parser = configparser.ConfigParser()
+            parser = ConfigParser()
             parser.read(file)
             parser.add_section('DigiUtil-Cli Conf')
             parser.add_section('Organization Validation')
@@ -108,7 +107,7 @@ def dcli():
             print('init.conf was saved in: ' + str(conf.resolve()))
         else:
             # Create init.conf
-            parser = configparser.ConfigParser()
+            parser = ConfigParser()
             parser.read('init.conf')
             parser.add_section('DigiUtil-Cli Conf')
             parser.add_section('Organization Validation')
@@ -125,8 +124,18 @@ def dcli():
         if reval == 'y':
             new_org()
         elif reval == 'n':
-            list = list_org('n', 'y')
-            pages = paginate(list, 5)
+            resp = list_org('n')
+            org_list = []
+            col = ['Org ID', 'Org Name', 'Address', 'Activated']
+            org_list.append(col)
+            for org in resp["organizations"]:
+                array = []
+                array.append(str(org['id']))
+                array.append(org['name'])
+                array.append(org['address'])
+                array.append(str(org['is_active']))
+                org_list.append(array)
+            pages = paginate(org_list, 5)
             org = input('Enter the id of the org you want to validate: ')
             # Get org name and confd path
             org_name = view_org(org)['name']
@@ -134,7 +143,7 @@ def dcli():
             if os.path.exists(str(conf)):
                 os.remove(str(conf))
             # Add org to init.conf
-            p1 = configparser.ConfigParser()
+            p1 = ConfigParser()
             p1.read(str(main_conf.resolve()))
             p1.set('Organization Validation', str('org_' + org), str(Path(conf)))
             with open(str(main_conf.resolve()), 'w') as f:
@@ -155,7 +164,7 @@ def dcli():
             else:
                 submit_org(org)
             # Create org.conf
-            p2 = configparser.ConfigParser()
+            p2 = ConfigParser()
             p2.read(str(conf))
             p2.add_section('Initialized Org')
             p2.set('Initialized Org', 'id', org)
@@ -204,7 +213,7 @@ def dcli():
         paginate(list, 10)
         # Get domain info by did
         did = input('Which domain do you want to configure? (Use domain id) ')
-        dom_resp = view_domain(did,'json')
+        dom_resp = view_domain(did)
         # Get org.conf path
         x = str(dom_resp['organization']['id']) + '.conf'
         org_conf = Path(confd_org / x)
@@ -216,13 +225,13 @@ def dcli():
             if os.path.exists(str(conf)):
                 os.remove(str(conf))
             # Add domain to init.conf
-            p1 = configparser.ConfigParser()
+            p1 = ConfigParser()
             p1.read(str(main_conf))
             p1.set('Domain Validation', str('dom_' + did), str(Path(conf)))
             with open(str(main_conf), 'w') as f:
                 p1.write(f)
             # Create domain.conf
-            p2 = configparser.ConfigParser()
+            p2 = ConfigParser()
             p2.read(str(conf))
             p2.add_section('Initialized Domain')
             p2.set('Initialized Domain', 'id', did)
@@ -316,7 +325,7 @@ def dcli():
             try:
                 resp = list_domains()
                 list = []
-                col = ['Domain ID','Domain Name','Parent Org','Parent Org ID','DCV Method','Validated For']
+                col = ['Domain ID','Domain Name','Parent Org','Parent Org ID','DCV Method','Ready For']
                 list.append(col)
                 for domain in resp['domains']:
                     if domain['is_active'] == True:
@@ -337,10 +346,9 @@ def dcli():
                         else:
                             array.append('')
                         array_val = []
-                        if domain.get('validations'):
-                            for val in domain['validations']:
-                                if val['status'] == 'active':
-                                    array_val.append(val['type'])
+                        for val in domain['validations']:
+                            if val['status'] == 'active':
+                                array_val.append(val['type'])
                         array.append(', '.join(array_val))
                         list.append(array)
                 paginate(list,10)
@@ -351,9 +359,7 @@ def dcli():
             try:
                 resp = activate_domain(args.activate_dom)
                 if resp.status_code == 204:
-                    colorize('green')
-                    print('Domain ' + str(args.activate_dom) + ' has been activated.\n')
-                    colorize_edit('reset')
+                    print('Domain ' + str(args.activate_dom) + ' has been activated.')
             except:
                 raise LookupError('Unable to activate the domain with Digicert.')
         # Deactivate domain
@@ -361,9 +367,7 @@ def dcli():
             try:
                 resp = deactivate_domain(args.deactivate_dom)
                 if resp.status_code == 204:
-                    colorize('green')
-                    print('Domain ' + str(args.deactivate_dom) + ' has been deactivated.\n')
-                    colorize_edit('reset')
+                    print('Domain ' + str(args.deactivate_dom) + ' has been deactivated.')
             except:
                 raise LookupError('Unable to deactivate the domain with Digicert.')
         # Submit domain for validation
@@ -391,6 +395,7 @@ def dcli():
         if args.new_dom:
             try:
                 print('Org must first be approved for OV or EV to create domain.')
+                regex_test = re.compile('(\w+|-|\*)+(\.{1})(\w+|-)+')
                 dom_name = input('Enter the new domain name: ')
                 while not regex_test.match(dom_name):
                     dom_name = input('Enter a valid domain name: ')
@@ -407,7 +412,7 @@ def dcli():
         # View domain information by domain id
         if args.view_dom:
             try:
-                resp = view_domain(args.view_dom, 'list')
+                resp = view_domain(args.view_dom)
                 paginate(resp,10)
             except:
                 raise LookupError('Unable to grab domain information from Digicert.')
@@ -440,7 +445,7 @@ def dcli():
             except:
                 raise LookupError('Unable to vretrieve org information from Digicert.')
 
-    # If request subparser
+    # If crt subparser
     if args.cmd == 'req':
         # List requests
         if args.list_req:
@@ -502,7 +507,7 @@ def dcli():
                 colorize_edit('reset')
             except:
                 raise LookupError('Unable to update request status with Digicert.')
-    # If user subparser
+    # If crt subparser
     if args.cmd == 'usr':
         # Add a new user
         if args.new_usr:
@@ -554,34 +559,9 @@ def dcli():
                 paginate(list, 10)
             except:
                 raise Exception('Unable to check status of API key.')
-    # If cryptography subparser
-    if args.cmd == 'crypto':
-        if args.new_csr:
-            try:
-                # Get UTF 8 encoded CSR
-                gen_custom_csr(args.new_csr)
-            except:
-                raise Exception('Failed to generate new CSR and private key.')
-        if args.new_key:
-            try:
-                # Get UTF 8 encoded key
-                key = gen_key(args.new_key)
-                with open('private.key','wb') as sf:
-                    sf.write(key.private_bytes(
-                        encoding=serialization.Encoding.PEM,
-                        format=serialization.PrivateFormat.TraditionalOpenSSL,
-                        encryption_algorithm=serialization.NoEncryption()
-                        ))
-            except:
-                raise Exception('Failed to generate new private key')
-        if args.decode_crt:
-            cert_path = Path(str(args.decode_crt))
-            # Validate filepath to cert
-            try:
-                if cert_path.exists() and cert_path.is_file():
-                    serialized = decode_cert(cert_path)
-            except:
-                raise Exception('Failed to decode certificate.')
+    # If crt subparser
+    #if args.cmd == 'crypto':
+    #    print('crypto sub parser')
 # Run application
 if __name__ == '__main__':
     dcli()

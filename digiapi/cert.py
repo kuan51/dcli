@@ -1,5 +1,5 @@
 from digiapi import conf
-from digiapi.conf import confd_cert, rest_status, confd_org, keyd, paginate, colorize, colorize_edit, regex_test
+from digiapi.conf import confd_cert, rest_status, confd_org, keyd, paginate, colorize, colorize_edit
 from digiapi.org import get_active_org, view_org
 from digiapi.domain import list_domains, view_domain
 from digiapi.crypto import gen_csr, gen_key
@@ -18,7 +18,6 @@ import json
 import requests
 import zipfile
 import io
-import shutil
 
 # REST resources
 url = 'https://www.digicert.com/services/v2/order/certificate'
@@ -67,13 +66,13 @@ def view_cert(ordernum, type):
         array.append(resp['status'])
         list.append(array)
         return list
-    elif type == 'json':
+    elif type == 'rest':
         req_url = url + '/' + ordernum
         req = requests.get(req_url, headers=headers_get)
         rest_status(req)
         return req.json()
     else:
-        raise Exception('Must choose json or list to view certificate information. ')
+        raise Exception('Must choose REST or LIST to view certificate information. ')
 
 def new_cert(type):
     # Pick org
@@ -92,6 +91,7 @@ def new_cert(type):
     # Get org name with oid
     org_name = view_org(oid)['name']
     # Test common name
+    regex_test = re.compile('(\w+|-|\*)+(\.{1})(\w+|-)+')
     cn = input('Enter a common name: ')
     while not regex_test.match(cn):
         cn = input('Enter a valid common name: ')
@@ -112,7 +112,6 @@ def new_cert(type):
     if not os.path.exists(str(org_conf)):
         print('Error: Initialize org ' + oid)
     else:
-        # Saves key and csr temporarily in the org folder until order id is created
         with open(str(org_conf)) as oc:
             p = ConfigParser()
             p.read(str(org_conf))
@@ -120,12 +119,7 @@ def new_cert(type):
             key_path = safe + '/private.key'
             csr_path = safe + '/request.csr'
         # Generate and save private key
-        alg = input('Create a ECC or RSA private key? ' )
-        while not alg in ['ecc','rsa']:
-            colorize('red')
-            alg = input('Enter ECC or RSA: ')
-            colorize_edit('reset')
-        key = gen_key(alg)
+        key = gen_key()
         with open(key_path, 'wb+') as f:
             f.write(key.private_bytes(
                 encoding=serialization.Encoding.PEM,
@@ -233,42 +227,43 @@ def new_cert(type):
         req_url = url + '/ssl'
         req = requests.post(req_url, headers=headers_post, data=payload_data)
         rest_status(req)
-        # Move key to new key.d
-        with open(str(org_conf)):
-            p = ConfigParser()
-            p.read(str(org_conf))
-            safe = p.get('Initialized Org', 'key_dir')
-            temp_key = safe + '/private.key'
-        dir = Path(safe + '/' + str(req.json()['id']) + '.d')
-        if not os.path.exists(str(dir)):
-            os.makedirs(str(dir))
-        key_name = Path(str(str(req.json()['id']) + '.key'))
-        saved_key = Path( dir / key_name )
-        with open(temp_key, 'r') as tk:
-            t = tk.read()
-        with open(str(saved_key), 'w+') as sk:
-            sk.write(t)
-        os.remove(temp_key)
-        # Move csr to order.d
-        temp_csr = Path( safe + '/request.csr')
-        saved_csr = Path( dir / Path(str(str(req.json()['id']) + '.csr')) )
-        with open(str(temp_csr), 'r') as tc:
-            tcsr = tc.read()
-        with open(str(saved_csr), 'w+') as sc:
-            sc.write(tcsr)
-        os.remove(str(temp_csr))
-        # Create pending req in cert.d
-        conf_name = str(req.json()['id']) + '.conf'
-        cert_conf = Path( confd_cert / conf_name )
-        with open(str(cert_conf), 'w+') as cc:
-            scp = ConfigParser()
-            scp.read(str(cert_conf))
-            scp.add_section('Initialized Cert')
-            scp.set('Initialized Cert', 'id', str(req.json()['id']))
-            scp.set('Initialized Cert', 'key_dir', str(dir))
-            scp.set('Initialized Cert', 'status', 'pending')
-            scp.write(cc)
-        print('Successfully placed new order # ' + str(req.json()['id']) + '\n')
+        if req.json()['requests'][0]['status'] == 'approved':
+            # Move key to new order.d
+            with open(str(org_conf)):
+                p = ConfigParser()
+                p.read(str(org_conf))
+                safe = p.get('Initialized Org', 'key_dir')
+                temp_key = safe + '/private.key'
+            dir = Path(safe + '/' + str(req.json()['id']) + '.d')
+            if not os.path.exists(str(dir)):
+                os.makedirs(str(dir))
+            key_name = Path(str(str(req.json()['id']) + '.key'))
+            saved_key = Path( dir / key_name )
+            with open(temp_key, 'r') as tk:
+                t = tk.read()
+            with open(str(saved_key), 'w+') as sk:
+                sk.write(t)
+            os.remove(temp_key)
+            # Move csr to order.d
+            temp_csr = Path( safe + '/request.csr')
+            saved_csr = Path( dir / Path(str(str(req.json()['id']) + '.csr')) )
+            with open(str(temp_csr), 'r') as tc:
+                tcsr = tc.read()
+            with open(str(saved_csr), 'w+') as sc:
+                sc.write(tcsr)
+            os.remove(str(temp_csr))
+            # Create pending req in cert.d
+            conf_name = str(req.json()['id']) + '.conf'
+            cert_conf = Path( confd_cert / conf_name )
+            with open(str(cert_conf), 'w+') as cc:
+                scp = ConfigParser()
+                scp.read(str(cert_conf))
+                scp.add_section('Initialized Cert')
+                scp.set('Initialized Cert', 'id', str(req.json()['id']))
+                scp.set('Initialized Cert', 'key_dir', str(dir))
+                scp.set('Initialized Cert', 'status', 'pending')
+                scp.write(cc)
+            print('Successfully placed new order # ' + str(req.json()['id']) + '\n')
     return req.json()
 
 def revoke_cert(cid, comment):
@@ -308,9 +303,9 @@ def list_duplicates(ordernum):
 # Reissue existing certificate order
 def reissue_cert(cid):
     # Get cid
-    cert_info = view_cert(cid, 'json')
-    order_no = str(cert_info['id'])
-    req_url = url + '/' + order_no + '/reissue'
+    cert_info = view_cert(cid, 'rest')
+    cid = str(cert_info['certificate']['id'])
+    req_url = url + '/' + cid + '/reissue'
     # Get request org info
     org_name = cert_info['organization']['name']
     org_city = cert_info['organization']['city']
@@ -326,6 +321,7 @@ def reissue_cert(cid):
     print('SANs = ' + old_sans)
     colorize_edit('reset')
     # Get common name
+    regex_test = re.compile('(\w+|-|\*)+(\.{1})(\w+|-)+')
     cn = input('Enter a new common name: ')
     while not regex_test.match(cn):
         cn = input('Enter a valid common name: ')
@@ -341,49 +337,39 @@ def reissue_cert(cid):
         else:
             sans.append(san)
     # Load existing conf and private key if exists
-    order_conf = Path( str(confd_cert) + '/' + str(order_no) + '.conf')
+    order_conf = Path( str(confd_cert) + '/' + str(cid) + '.conf')
     org_conf = Path( str(confd_org) + '/' + str(oid) + '.conf' )
-    if os.path.exists(str(order_conf)):
-        with open(str(order_conf), 'r'):
+    if os.path.exists(order_conf):
+        with open(order_conf, 'r'):
             scp = ConfigParser()
             scp.read(str(order_conf))
             key_dir = scp.get('Initialized Cert', 'key_dir')
-            key_path = Path( key_dir + '/' + str(order_no) + '.key')
-            csr_path = Path( key_dir + '/' + str(order_no) + '.csr')
+            key_path = Path( key_dir + '/' + cid + '.key')
             with open(str(key_path), 'rb') as f:
                 key_bytes = f.read()
                 key = load_pem_private_key(key_bytes, None, default_backend())
                 # Generate a CSR from private key and org info
-                signed_req = x509.CertificateSigningRequestBuilder().subject_name(x509.Name([
+                csr = x509.CertificateSigningRequestBuilder().subject_name(x509.Name([
                     x509.NameAttribute(NameOID.COUNTRY_NAME, org_country),
                     x509.NameAttribute(NameOID.STATE_OR_PROVINCE_NAME, org_state),
                     x509.NameAttribute(NameOID.LOCALITY_NAME, org_city),
                     x509.NameAttribute(NameOID.ORGANIZATION_NAME, org_name),
                     x509.NameAttribute(NameOID.COMMON_NAME, cn),
                     ])).sign(key, hashes.SHA256(), default_backend())
-                csr = str(signed_req.public_bytes(serialization.Encoding.PEM), 'utf-8')
-                # Save CSR
-                with open(str(csr_path), 'w+') as f:
-                    f.write(csr)
     # Create new conf file
     else:
-        order_keyd = Path( str(keyd) + '/' + org_name + '/' + str(order_no) + '.d' )
+        order_keyd = Path( str(keyd) + '/' + org_name + '/' + str(cid) + '.d' )
         with open(str(order_conf), 'w+') as f:
             scp = ConfigParser()
             scp.read(str(order_conf))
             scp.add_section('Initialized Cert')
-            scp.set('Initialized Cert', 'id', str(order_no))
+            scp.set('Initialized Cert', 'id', cid)
             scp.set('Initialized Cert', 'key_dir', str(order_keyd))
             scp.set('Initialized Cert', 'status', cert_info['status'])
             scp.write(f)
         # Generate and save private key
-        alg = input('Create a ECC or RSA private key? ' )
-        while not alg in ['ecc','rsa']:
-            colorize('red')
-            alg = input('Enter ECC or RSA: ')
-            colorize_edit('reset')
-        key = gen_key(alg)
-        key_path = Path( str(order_keyd) + '/' + str(order_no) + '.key' )
+        key = gen_key()
+        key_path = Path( str(order_keyd) + '/' + cid + '.key' )
         if not os.path.exists(str(order_keyd)):
             os.makedirs(str(order_keyd))
         with open(str(key_path), 'wb+') as f:
@@ -393,10 +379,10 @@ def reissue_cert(cid):
                 encryption_algorithm=serialization.NoEncryption()
                 ))
         # Generate csr
-        csr_path = Path( str(order_keyd) + '/' + str(order_no) + '.csr' )
+        csr_path = Path( str(order_keyd) + '/' + cid + '.csr' )
         csr = gen_csr(key)
-        with open(str(csr_path), 'w+') as f:
-            f.write(csr, 'utf-8')
+        with open(str(csr_path), 'wb+') as f:
+            f.write(csr.public_bytes(serialization.Encoding.PEM))
     # Choose signature hash
     algs = ['1] sha256', '2] sha384', '3] sha512']
     print('Signature hash algorithms')
@@ -416,22 +402,19 @@ def reissue_cert(cid):
       'certificate': {
         'common_name': cn,
         'dns_names': sans,
-        'csr': csr,
+        'csr': str(csr.public_bytes(serialization.Encoding.PEM), 'utf-8'),
         'signature_hash': hash_alg
       }
     })
     req = requests.post(req_url, headers=headers_post, data=payload)
     rest_status(req)
-    colorize('green')
-    print('Reissue for ' + cn + ' has been submitted to Digicert for processing.\n')
-    colorize_edit('reset')
     return req.json()
 
 # Request duplicate of existing certificate order
 def duplicate_cert(cid):
     # Get order information and load cert conf
     try:
-        info = view_cert(cid,'json')
+        info = view_cert(cid,'rest')
         ordernum = info['id']
         cert_path = Path(str(confd_cert) + '/' + cid + '.conf')
         r = ConfigParser()
@@ -442,36 +425,26 @@ def duplicate_cert(cid):
     # Get org information to create key.d
     org_id = info['organization']['id']
     org_name = info['organization']['name']
-    # Generate and save private key
-    alg = input('Create a ECC or RSA private key? ' )
-    while not alg in ['ecc','rsa']:
-        colorize('red')
-        alg = input('Enter ECC or RSA: ')
-        colorize_edit('reset')
-    key = gen_key(alg)
+    # Create KEY
+    dup_key = gen_key()
     # Generate a CSR from private key
-    dup_csr = gen_csr(key)
+    dup_csr = gen_csr(dup_key)
     # Get duplicate certificate information
     dups = list_duplicates(cid)
+    count = len(dups['certificates'])
     # If no duplicates, create folder 001
     if not dups.get('certificates'):
         dup_keyd = Path(str(cert_keyd) + '/01.d')
-        os.makedirs(str(dup_keyd))
+        os.makedirs(dup_keyd)
     # Else count the number of dups and create new dup folder
     else:
-        count = len(dups['certificates'])
         dup_num = count + 1
         dup_keyd = Path(str(cert_keyd) + '/0' + str(dup_num) + '.d')
-        if dup_keyd.exists():
-            try:
-                shutil.rmtree(str(dup_keyd))
-            except OSError as e:
-                print("Error: %s - %s." % (e.filename,e.strerror))
-        os.makedirs(str(dup_keyd))
+        os.makedirs(dup_keyd)
     # Write CSR and KEY to new dup folder
     key_path = Path(str(dup_keyd) + '/private.key')
     with open(str(key_path), 'wb+') as f:
-        f.write(key.private_bytes(
+        f.write(dup_key.private_bytes(
             encoding=serialization.Encoding.PEM,
             format=serialization.PrivateFormat.TraditionalOpenSSL,
             encryption_algorithm=serialization.NoEncryption()
@@ -514,14 +487,12 @@ def duplicate_cert(cid):
         print('Default selected: sha256')
     # Set common name
     cn = info['certificate']['common_name']
-    colorize('blue')
-    print("Current common name: " + cn)
-    colorize_edit('reset')
     if info['product']['name_id'] == 'ssl_multi_domain' or info['product']['name_id'] == 'ssl_ev_multi_domain':
         # Convert sans list to array
         sans = info['certificate']['dns_names']
     if info['product']['name_id'] == 'ssl_cloud_wildcard' or info['product']['name_id'] == 'ssl_wildcard':
         # Get array of SANs
+        regex_test = re.compile('(\w+|-|\*)+(\.{1})(\w+|-)+')
         sans = []
         print('Type Subject Alternate Name and press enter (Enter d when done):')
         while 1 == 1:
@@ -588,7 +559,7 @@ def duplicate_cert(cid):
         dup_cert_path = Path( str(dup_keyd) + '/cert.zip' )
         with open(str(dup_cert_path), 'wb+') as save:
             save.write(dup_cert)
-    colorize('green')
+    colorize('blue')
     print('Duplicate successfully created in:\n' + str(dup_cert_path))
     colorize_edit('reset')
 
