@@ -8,6 +8,8 @@ api.key
 conf.d/
 key.d/
 venv*
+*.csr
+*.key
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
