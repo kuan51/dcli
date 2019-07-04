@@ -1,6 +1,8 @@
 import os
 import itertools
 import sys
+import re
+import pycountry
 from itertools import islice, tee, chain
 from pathlib import Path
 from configparser import SafeConfigParser
@@ -22,6 +24,8 @@ GREEN = "\033[0;32m"
 RESET = "\033[0;0m"
 BOLD = "\033[;1m"
 REVERSE = "\033[;7m"
+# Regular Expressions
+regex_test = re.compile('(\w+|-|\*)+(\.{1})(\w+|-)+')
 
 # Find conf.d, else create conf.d
 if not os.path.exists(str(confd)):
@@ -114,3 +118,8 @@ def colorize_edit(set):
     elif set == 'reverse':
         set = REVERSE
     sys.stdout.write(set)
+
+# Find RFC compliant country code
+def get_ctry_code(ctry):
+    ctry_code = pycountry.countries.lookup(ctry)
+    return ctry_code.alpha_2

@@ -66,7 +66,7 @@ def new_org():
       'name': name,
       'address': street,
       'zip': zip,
-      'city': phone,
+      'city': city,
       'state': state,
       'country': country,
       'telephone': phone,
@@ -82,8 +82,8 @@ def new_org():
     })
     req = requests.post(url, headers=headers_post, data=payload)
     rest_status(req)
-    print('\nNew org id: ' + str(resp["id"]))
-    return resp["id"]
+    print('\nNew org id: ' + str(req.json()["id"]))
+    return req.json()["id"]
 
 # See active validations for an org
 def active_org_val(oid):
